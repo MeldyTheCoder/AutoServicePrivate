@@ -1,26 +1,42 @@
 from django import forms
 from phonenumber_field.widgets import PhoneNumberPrefixWidget
+from AutoServiceAdmin.forms import CrispyForm
+import django_tables2 as tables
 from . import models
 
 
-class ShowroomForm(forms.ModelForm):
+class ShowroomForm(CrispyForm, forms.ModelForm):
     """
     Универсальная форма для модели автосалона
     """
+
+    submit_field = 'Изменить'
+
     model = models.Showroom
 
     class Meta:
+        model = models.Showroom
         widgets = {
             'phone_number': PhoneNumberPrefixWidget()
         }
         exclude = ['owner', 'slug']
 
 
-class ShowroomAdminForm(forms.ModelForm):
+class ShowroomDeletionForm(CrispyForm, forms.Form):
+    """
+    Форма для удаления автосалона
+    """
+
+    submit_field = 'Удалить'
+
+
+class ShowroomAdminForm(CrispyForm, forms.ModelForm):
     """
     Форма для редактирования и добавления данных по модели автосалона
     Только для админ-панели
     """
+
+    submit_field = 'Изменить'
 
     model = models.Showroom
 
@@ -30,11 +46,13 @@ class ShowroomAdminForm(forms.ModelForm):
         }
 
 
-class EmployeeAdminForm(forms.ModelForm):
+class EmployeeAdminForm(CrispyForm, forms.ModelForm):
     """
     Форма для редактирования и добавления данных по модели автосалона
     Только для админ-панели
     """
+
+    submit_field = 'Изменить'
 
     model = models.Employee
 
@@ -44,10 +62,12 @@ class EmployeeAdminForm(forms.ModelForm):
         }
 
 
-class EmployeeForm(forms.ModelForm):
+class EmployeeForm(CrispyForm, forms.ModelForm):
     """
     Универсальная форма для модели сотрудника
     """
+
+    submit_field = 'Изменить'
 
     model = models.Employee
 
@@ -58,10 +78,23 @@ class EmployeeForm(forms.ModelForm):
         exclude = ['showroom', 'slug']
 
 
-class ProductCategoryForm(forms.ModelForm):
+class EmployeeTable(tables.Table):
+    """
+    Табличное отображение модели сотрудника
+    """
+
+    class Meta:
+        attrs = {"class": "table table-striped table-bordered"}
+        model = models.Employee
+        exclude = ['showroom', 'slug']
+
+
+class ProductCategoryForm(CrispyForm, forms.ModelForm):
     """
     Универсальная форма для модели категории товара
     """
+
+    submit_field = 'Изменить'
 
     model = models.ProductCategory
 
@@ -69,10 +102,23 @@ class ProductCategoryForm(forms.ModelForm):
         exclude = ['showroom', 'slug']
 
 
-class ProductForm(forms.ModelForm):
+class ProductCategoryTable(tables.Table):
+    """
+    Табличное отображение модели категории товара
+    """
+
+    class Meta:
+        attrs = {"class": "table table-striped table-bordered"}
+        model = models.ProductCategory
+        exclude = ['showroom', 'slug']
+
+
+class ProductForm(CrispyForm, forms.ModelForm):
     """
     Универсальная форма для модели товара
     """
+
+    submit_field = 'Изменить'
 
     model = models.Product
 
@@ -80,10 +126,23 @@ class ProductForm(forms.ModelForm):
         exclude = ['showroom', 'slug']
 
 
-class ProductSaleItemForm(forms.ModelForm):
+class ProductTable(tables.Table):
+    """
+    Табличное отображение модели товара
+    """
+
+    class Meta:
+        attrs = {"class": "table table-striped table-bordered"}
+        model = models.Product
+        exclude = ['showroom', 'slug']
+
+
+class ProductSaleItemForm(CrispyForm, forms.ModelForm):
     """
     Универсальная форма для модели товара продажи
     """
+
+    submit_field = 'Изменить'
 
     model = models.ProductSaleItem
 
@@ -91,10 +150,23 @@ class ProductSaleItemForm(forms.ModelForm):
         exclude = ['slug']
 
 
-class ProductSaleForm(forms.ModelForm):
+class ProductSaleItemTable(tables.Table):
+    """
+    Табличное отображение модели товара продажи
+    """
+
+    class Meta:
+        attrs = {"class": "table table-striped table-bordered"}
+        model = models.ProductSaleItem
+        exclude = ['slug']
+
+
+class ProductSaleForm(CrispyForm, forms.ModelForm):
     """
     Универсальная форма для модели продажи
     """
+
+    submit_field = 'Изменить'
 
     model = models.ProductSale
 
@@ -102,10 +174,23 @@ class ProductSaleForm(forms.ModelForm):
         exclude = ['showroom', 'slug']
 
 
-class ProductSupplyItemForm(forms.ModelForm):
+class ProductSaleTable(tables.Table):
+    """
+    Табличное отображение модели продажи
+    """
+
+    class Meta:
+        attrs = {"class": "table table-striped table-bordered"}
+        model = models.ProductSale
+        exclude = ['showroom', 'slug']
+
+
+class ProductSupplyItemForm(CrispyForm, forms.ModelForm):
     """
     Универсальная форма для модели товара поставки
     """
+
+    submit_field = 'Изменить'
 
     model = models.ProductSupplyItem
 
@@ -113,10 +198,23 @@ class ProductSupplyItemForm(forms.ModelForm):
         exclude = ['slug']
 
 
-class ProductSupplyForm(forms.ModelForm):
+class ProductSupplyItemTable(tables.Table):
+    """
+    Табличное отображение модели предмета поставки
+    """
+
+    class Meta:
+        attrs = {"class": "table table-striped table-bordered"}
+        model = models.ProductSupplyItem
+        exclude = ['slug']
+
+
+class ProductSupplyForm(CrispyForm, forms.ModelForm):
     """
     Универсальная форма для модели поставки
     """
+
+    submit_field = 'Изменить'
 
     model = models.ProductSupply
 
@@ -124,12 +222,36 @@ class ProductSupplyForm(forms.ModelForm):
         exclude = ['showroom', 'slug']
 
 
-class DealerForm(forms.ModelForm):
+class ProductSupplyTable(tables.Table):
+    """
+    Табличное отображение модели поставки
+    """
+
+    class Meta:
+        attrs = {"class": "table table-striped table-bordered"}
+        model = models.ProductSupply
+        exclude = ['showroom', 'slug']
+
+
+class DealerForm(CrispyForm, forms.ModelForm):
     """
     Универсальная форма для модели дилера
     """
 
+    submit_field = 'Изменить'
+
     model = models.Dealer
 
     class Meta:
+        exclude = ['showroom', 'slug']
+
+
+class DealerTable(tables.Table):
+    """
+    Табличное отображение модели дилера
+    """
+
+    class Meta:
+        attrs = {"class": "table table-striped table-bordered"}
+        model = models.Dealer
         exclude = ['showroom', 'slug']

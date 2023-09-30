@@ -1,6 +1,7 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, get_list_or_404
 from django.http.response import Http404
+from django.urls import reverse_lazy
 from django.apps import apps
 from django.views.generic.base import ContextMixin
 from django.views.generic import (
@@ -20,19 +21,29 @@ from account.mixins import EmailVerifiedMixin
 statistics_models = {
     'employees': models.Employee,
     'products': models.Product,
-    'sales': models.ProductSale,
-    'supplies': models.ProductSupply,
     'dealers': models.Dealer,
     'categories': models.ProductCategory
 }
 
+statistics_descriptions = {
+    'employees': "Раздел статистики по сотрудникам.",
+    'products': "Раздел статистики по товарам.",
+    'dealers': "Раздел статистики по дилерам.",
+    'categories': "Раздел статистики по категориям товаров."
+}
+
 statistics_models_forms = {
     'employees': forms.EmployeeForm,
-    'products': forms.EmployeeForm,
-    'sales': forms.ProductSaleForm,
-    'supplies': forms.ProductSupplyForm,
+    'products': forms.ProductForm,
     'dealers': forms.DealerForm,
     'categories': forms.ProductCategoryForm
+}
+
+statistics_models_tables = {
+    'employees': forms.EmployeeTable,
+    'products': forms.ProductTable,
+    'dealers': forms.DealerTable,
+    'categories': forms.ProductCategoryTable
 }
 
 
@@ -63,6 +74,7 @@ class StatisticsDetailView(
     template_name = 'showroom/section_item_statistics.html'
     _model_name = None
     _showroom = None
+    _model = None
 
     def get_object(self, queryset=None):
         showroom_slug = self.kwargs.get('showroom_slug')
@@ -79,15 +91,15 @@ class StatisticsDetailView(
         if not self._model_name:
             raise Http404
 
-        model = statistics_models.get(self._model_name)
-        if not model:
+        self._model = statistics_models.get(self._model_name)
+        if not self._model:
             raise Http404
 
         object_slug = self.kwargs.get('object_slug')
         if not object_slug:
             raise Http404
 
-        model_object = model.objects.get(slug=object_slug, showroom=self._showroom)
+        model_object = self._model.objects.get(slug=object_slug, showroom=self._showroom)
         return model_object
 
     def get_context_data(self, **kwargs):
@@ -96,7 +108,7 @@ class StatisticsDetailView(
 
         context['object'] = model_object
         context['statistics'] = model_object.statistics()
-        context['model'] = model_object._meta.model
+        context['model'] = self._model
         context['model_short'] = self._model_name
         context['showroom'] = self._showroom
         return context
@@ -108,8 +120,11 @@ class StatisticsListView(
     TitleContextMixin,
     ListView
 ):
+    template_name = 'showroom/section_list.html'
     _model_name = None
     _showroom = None
+    _model = None
+    paginate_by = 20
 
     def get_queryset(self):
         showroom_slug = self.kwargs.get('showroom_slug')
@@ -126,22 +141,32 @@ class StatisticsListView(
         if not self._model_name:
             raise Http404
 
-        model = statistics_models.get(self._model_name)
-        if not model:
+        self._model = statistics_models.get(self._model_name)
+        if not self._model:
             raise Http404
 
-        return model.objects.filter(showroom=self._showroom)
+        return self._model.objects.filter(showroom=self._showroom)
+
+    def get_table(self, queryset):
+        table_class = statistics_models_tables.get(self._model_name)
+        table = table_class(data=queryset)
+        return table
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         queryset = self.get_queryset()
 
         context['queryset'] = queryset
-        context['statistics'] = queryset.statistics()
-        context['model'] = queryset.model
+        context['statistics'] = queryset.statistics(verbose_names=True)
+        context['model'] = self._model
         context['model_short'] = self._model_name
         context['showroom'] = self._showroom
+        context['table'] = self.get_table(queryset)
         return context
+
+
+class StatisticsListStatView(StatisticsListView):
+    template_name = 'showroom/section_statistics.html'
 
 
 class StatisticsEditView(
@@ -230,7 +255,6 @@ class StatisticsCreateView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
         context['object'] = None
         context['model'] = self.model
         context['model_short'] = self._model_name
@@ -250,13 +274,14 @@ class StatisticsDeleteView(
 ):
     template_name = 'showroom/section_item_delete.html'
     _model_name = None
+    _showroom = None
 
     def get_object(self, queryset=None):
         showroom_slug = self.kwargs.get('showroom_slug')
         if not showroom_slug:
             raise Http404
 
-        showroom = get_object_or_404(
+        self._showroom = get_object_or_404(
             models.Showroom,
             slug=showroom_slug,
             owner=self.request.user
@@ -274,7 +299,7 @@ class StatisticsDeleteView(
         if not object_slug:
             raise Http404
 
-        model_object = model.objects.get(slug=object_slug, showroom=showroom)
+        model_object = model.objects.get(slug=object_slug, showroom=self._showroom)
         return model_object
 
     def get_context_data(self, **kwargs):
@@ -285,6 +310,7 @@ class StatisticsDeleteView(
         context['statistics'] = model_object.statistics()
         context['model'] = model_object._meta.model
         context['model_short'] = self._model_name
+        context['showroom'] = self._showroom
         return context
 
 
@@ -299,11 +325,11 @@ class ShowroomDetailView(
     template_name = 'showroom/showroom_detail.html'
 
     def get_object(self, queryset=None):
-        return queryset.get(slug=self.kwargs.get("slug"))
+        return get_object_or_404(self.model, slug=self.kwargs.get("showroom_slug"))
 
     def dispatch(self, request, *args, **kwargs):
         user = request.user
-        model_object = self.get_object(self.queryset)
+        model_object = self.get_object()
 
         if user.pk != model_object.owner.pk:
             raise Http404
@@ -312,47 +338,100 @@ class ShowroomDetailView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['statistics'] = self.get_object(self.queryset).statistics()
+        object = self.model.objects.filter(pk=self.get_object().pk)
+
+        context['statistics_models'] = statistics_models
+        context['statistics'] = object.statistics(verbose_names=True)
         return context
 
 
 class ShowroomDeleteView(
     LoginRequiredMixin,
     EmailVerifiedMixin,
-    TitleContextMixin,
     DeleteView
 ):
     """
     Страница для удаления автосалона
     """
 
+    form_class = forms.ShowroomDeletionForm
     template_name = 'showroom/showroom_delete.html'
     model = models.Showroom
+    success_url = reverse_lazy('showroom_list')
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(self.model, slug=self.kwargs.get("showroom_slug"))
 
 
 class ShowroomEditView(
     LoginRequiredMixin,
     EmailVerifiedMixin,
-    TitleContextMixin,
     UpdateView
 ):
     """
     Страница для редактирования автосалона
     """
 
+    form_class = forms.ShowroomForm
     template_name = 'showroom/showroom_edit.html'
     model = models.Showroom
+    success_url = None
+
+    def get_object(self, queryset=None):
+        model_object = get_object_or_404(self.model, slug=self.kwargs.get("showroom_slug"))
+        self.success_url = reverse_lazy('showroom_detail', kwargs={'showroom_slug': model_object.slug})
+        return model_object
 
 
 class ShowroomCreateView(
     LoginRequiredMixin,
     EmailVerifiedMixin,
-    TitleContextMixin,
     CreateView
 ):
     """
     Страница для создания автосалона
     """
 
+    form_class = forms.ShowroomForm
     template_name = 'showroom/showroom_add.html'
     model = models.Showroom
+    success_url = reverse_lazy('showroom_list')
+
+    def form_valid(self, form):
+        form.instance.owner = self.request.user
+        return super().form_valid(form)
+
+
+class ShowroomListView(
+    LoginRequiredMixin,
+    EmailVerifiedMixin,
+    RedirectView
+):
+
+    """
+    Страница для просмотра всех автосалонов пользователя
+    """
+
+    def get_redirect_url(self, *args, **kwargs):
+        user = self.request.user
+        showrooms = user.showrooms.all()
+
+        if not showrooms:
+            return reverse_lazy('showroom_empty')
+
+        showroom = showrooms.first()
+        return reverse_lazy('showroom_detail', kwargs={'showroom_slug': showroom.slug})
+
+
+class ShowroomEmptyView(
+    LoginRequiredMixin,
+    EmailVerifiedMixin,
+    TemplateView
+):
+    """
+    Страница для отображения автосалонов, на случай, если
+    Пользователь их еще не добавил
+    """
+
+    template_name = 'showroom/showroom_empty.html'
+

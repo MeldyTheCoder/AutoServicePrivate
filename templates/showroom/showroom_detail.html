@@ -1,10 +1,86 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'showroom_base.html' %}
 
-</body>
-</html>
+{% load showroom %}
+
+
+{% block title %}
+Автосалон "{{ object.title }}"
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <nav class="breadcrumbs">
+                <ul>
+                    <li><a href="{% url 'index' %}">Главная</a></li>
+                    <li><a href="{% url 'showroom_list' %}">Автосалоны</a></li>
+                    <li><span>{{ object.title }}</span></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block side_content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <h1 class="section-title h3"><span>Автосалон "{{ object.title }}"</span></h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-4 d-flex">
+        <div class="btn-group">
+            <a class="h2 btn btn-outline-secondary rounded" href="{% url 'showroom_edit' showroom_slug=object.slug %}">
+              <i class="fa-solid fa-pencil"></i>
+              Редактировать
+            </a>
+
+            <a class="h2 btn btn-outline-danger rounded" href="{% url 'showroom_delete' showroom_slug=object.slug %}">
+              <i class="fa-solid fa-minus"></i>
+              Удалить
+            </a>
+        </div>
+    </div>
+
+</div>
+
+<hr>
+
+<div class="row p-3">
+    {% for short, model in statistics_models.items %}
+        <div class="col-lg-4 col-md-4 col-sm-6 mb-3">
+            {% statistics_model_card short model object %}
+        </div>
+    {% endfor %}
+</div>
+
+<hr>
+
+<div class="row mb-3">
+    <div class="col-12">
+        <h1 class="section-title h5"><span>Общая статистика</span></h1>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Хар-ка</th>
+                <th scope="col">Зачение</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for key, val in statistics.items %}
+                <tr>
+                    <td>{{ key }}</td>
+                    <td>{{ val|stat_value }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

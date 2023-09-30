@@ -1,10 +1,33 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html' %}
 
-</body>
-</html>
+{% load static %}
+{% load showroom %}
+{% load pagination %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="row">
+            {% showroom_sidebar %}
+
+            <div class="col-lg-9 col-md-8">
+                {% block side_content %}
+                    <div class="row">
+                        <div class="col-sm d-flex justify-content-center p-3">
+                            <p class="h4">{% block empty_text %}Ничего нет{% endblock %}</p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm d-flex justify-content-center p-3">
+                            <a class="btn btn-warning rounded" href="{% url 'index' %}">Назад на главную</a>
+                        </div>
+                    </div>
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+
+    {% if page_obj and page_obj.has_other_pages %}
+        {% pagination %}
+    {% endif %}
+{% endblock %}

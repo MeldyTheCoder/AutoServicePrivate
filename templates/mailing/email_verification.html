@@ -1,10 +1,15 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'email_base.html' %}
 
-</body>
-</html>
+
+{% block content %}
+<h1 style="font-size:20px;">Подтверждение почты</h1>
+<p style="color:#6c757d;">Пожалуйста, нажмите на кнопку ниже, чтобы подтвердить Вашу почту.</p>
+
+<a style="color:#ffd333; font-size:20px;-webkit-appearance: button; -moz-appearance: button; appearance: button; text-decoration: none;" href="http://{{ domain }}{% url 'email_verification_check' uidb64=uid token=token %}">
+    Подтвердить почту
+</a>
+
+<hr>
+
+<p style="color:#6c757d;">Если это были не вы, то, пожалуйста, поменяйте пароль в настройках Вашего профиля.</p>
+{% endblock %}

@@ -1,10 +1,47 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html '%}
 
-</body>
-</html>
+{% load crispy_forms_tags %}
+
+{% block title %}
+Регистрация
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <nav class="breadcrumbs">
+                <ul>
+                    <li><a href="{% url 'index' %}">Главная</a></li>
+                    <li><span>Регистрация</span></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mb-3">
+    <div class="row">
+        <div class="col-12">
+
+            <div class="page-register bg-white p-3">
+                <h1 class="section-title h3"><span>Регистрация</span></h1>
+
+                <div class="row">
+                    <div class="col-md-6 offset-md-3">
+                        <form method="POST" action="{% url 'registration' %}">
+                            {% csrf_token %}
+
+                            {% crispy form form.helper %}
+
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,10 +1,82 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'profile_base.html' %}
 
-</body>
-</html>
+{% block title %}
+Профиль
+{% endblock %}
+
+{% load humanize %}
+{% load static %}
+
+{% block breadcrumbs %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <nav class="breadcrumbs">
+                <ul>
+                    <li><a href="{% url 'index' %}">Главная</a></li>
+                    <li><span>Профиль</span></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block side_content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <h1 class="section-title h3"><span>Профиль</span></h1>
+    </div>
+</div>
+
+<div class="profile-info">
+    <div class="row">
+        <div class="col-sm-2 pull-left">
+            <img src="https://www.meme-arsenal.com/memes/9991866f463a60d23ebb95b28be664e1.jpg" class="rounded-circle" style="width: 150px;"/>
+        </div>
+
+        <div class="col-sm-3 pull-right col-sm-offset-2">
+            {% if user.first_name and user.last_name %}
+                <h4>{{ user.first_name }} {{ user.last_name }}</h4>
+            {% elif user.first_name %}
+                <h4>{{ user.first_name }}</h4>
+            {% elif user.last_name %}
+                <h4>{{ user.last_name }}</h4>
+            {% else %}
+                <h4>Анонимный пользователь</h4>
+            {% endif %}
+
+            <i>@{{ user.username }}</i>
+        </div>
+    </div>
+
+
+    <div class="col-sm col-sm-offset-2">
+        <h5 class="section-title">
+            <span>Основная информация</span>
+        </h5>
+    </div>
+
+    <div class="col-sm-4 col-sm-offset-2">
+        <table class="table table-borderless">
+            <tbody>
+                <tr>
+                    <td class="h6">Дата регистрации:</td>
+                    <td>{{ user.date_joined }}</td>
+                </tr>
+
+                <tr>
+                    <td class="h6">Дата последнего входа:</td>
+                    <td>{{ user.last_login|naturaltime }}</td>
+                </tr>
+
+                <tr>
+                    <td class="h6">Дата последней смены пароля:</td>
+                    <td>{{ user.date_password_updated }}</td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

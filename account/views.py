@@ -1,8 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_protect
-from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.cache import never_cache
 from django.http.response import Http404, HttpResponseForbidden
 from django.core.exceptions import PermissionDenied
@@ -10,18 +8,21 @@ from django.contrib.auth import get_user_model
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.urls import reverse_lazy
-from django.shortcuts import redirect, get_object_or_404, get_list_or_404
+from django.shortcuts import redirect, get_object_or_404
 from . import (
     mixins,
     tokens,
-    forms
+    forms,
 )
+
+from .mailing import mailing
 from django_registration.backends.one_step.views import RegistrationView
 from django.contrib.auth.views import (
     LoginView,
     LogoutView,
     PasswordChangeView,
     PasswordResetView,
+    PasswordResetDoneView,
     PasswordResetConfirmView,
     RedirectURLMixin
 )
@@ -38,12 +39,33 @@ from django.views.generic import (
 USER_MODEL = get_user_model()
 
 
-class ProfileView(LoginRequiredMixin, mixins.EmailVerifiedMixin, DetailView):
+class ProfileView(
+    LoginRequiredMixin,
+    mixins.EmailVerifiedMixin,
+    DetailView
+):
     """
     Страница для просмотра профиля авторизованному пользователю.
     """
 
     template_name = 'account/profile.html'
+
+    def get_object(self, queryset=None):
+        return self.request.user
+
+
+class ProfileEditView(
+    LoginRequiredMixin,
+    mixins.EmailVerifiedMixin,
+    UpdateView
+):
+    """
+    Страница для просмотра профиля авторизованному пользователю.
+    """
+
+    template_name = 'account/profile_edit.html'
+    form_class = forms.ProfileForm
+    success_url = reverse_lazy('profile')
 
     def get_object(self, queryset=None):
         return self.request.user
@@ -68,6 +90,7 @@ class CustomRegistrationView(RegistrationView):
     form_class = forms.RegistrationForm
     redirect_field_name = 'next'
     redirect_authenticated_user = True
+    success_url = reverse_lazy('profile')
     template_name = 'account/registration.html'
 
 
@@ -76,6 +99,8 @@ class CustomPasswordChangeView(PasswordChangeView):
     Страница для смены пароля пользователя.
     """
 
+    success_url = reverse_lazy('profile')
+    form_class = forms.CustomPasswordChangeForm
     template_name = 'account/password_change.html'
 
 
@@ -84,11 +109,21 @@ class CustomPasswordResetView(PasswordResetView):
     Страница для восстановления пароля пользователя.
     """
 
+    title = 'Dealer Helper | Сброс пароля'
+
+    html_email_template_name = 'mailing/password_reset.html'
     template_name = 'account/password_reset.html'
+    form_class = forms.CustomPasswordResetForm
+
+
+class CustomPasswordResetDoneView(PasswordResetDoneView):
+    template_name = 'account/password_reset_done.html'
 
 
 class CustomPasswordResetConfirmView(PasswordResetConfirmView):
     success_url = reverse_lazy('profile')
+    template_name = 'account/password_reset.html'
+    form_class = forms.CustomSetPasswordForm
 
 
 class CustomLogoutView(LogoutView):
@@ -122,17 +157,15 @@ class EmailVerificationSend(
     После отправки перенаправляет пользователя на страницу об информации об отправке письма.
     """
 
-    url = reverse_lazy('email_verification')
+    url = reverse_lazy('email_verification_info')
 
-    @method_decorator(csrf_protect)
     def dispatch(self, request, *args, **kwargs):
         user = request.user
         email = user.email
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         token = tokens.email_token.make_token(user)
 
-        # mailing.email_verify_mail(request=request, uid=uid, token=token, recipient_list=[email])
-        self.url = reverse_lazy('email_verification')
+        mailing.email_verify_mail(request=request, uid=uid, token=token, recipient_list=[email])
         return super().dispatch(request, *args, **kwargs)
 
 
@@ -147,10 +180,9 @@ class EmailVerificationCheckView(
 
     url = reverse_lazy('profile')
 
-    @method_decorator(sensitive_post_parameters())
     @method_decorator(never_cache)
     def dispatch(self, request, *args, **kwargs):
-        uid = kwargs.get('uid')
+        uid = kwargs.get('uidb64')
         token = kwargs.get('token')
 
         if not uid:
@@ -165,13 +197,13 @@ class EmailVerificationCheckView(
         if not user.is_active:
             raise PermissionDenied
 
-        if user.email_verified:
+        if user.is_email_verified:
             messages.warning(request, message='Почта данного акканта уже подтверждена!')
             return super().dispatch(request, *args, **kwargs)
 
         if tokens.email_token.check_token(user, token):
             messages.success(request, message='Ваша почта была успешно подтверждена!')
-            user.email_verified = True
+            user.is_email_verified = True
             user.save()
             return super().dispatch(request, *args, **kwargs)
 

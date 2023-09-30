@@ -1,0 +1,14 @@
+
+<div class="card border-secondary mb-3" style="max-width: auto;">
+    <div class="card-header border-secondary d-flex justify-content-between align-items-center">
+        {{ verbose_name_plural }}
+
+        <a href="{% url 'statistics_list' showroom_slug=showroom.slug model_name=model_short %}" class="btn btn-light rounded">
+            <i class="fa-solid fa-eye"></i>
+        </a>
+    </div>
+
+    <div class="card-body border-secondary text-secondary">
+        <p class="card-text">{{ description }}</p>
+    </div>
+</div>

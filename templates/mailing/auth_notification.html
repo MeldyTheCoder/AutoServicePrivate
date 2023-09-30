@@ -1,0 +1,23 @@
+{% extends 'email_base.html' %}
+
+
+{% block content %}
+<h1 style="font-size:20px;">Вход в аккаунт</h1>
+<table>
+    <tbody>
+        <tr>
+            <td>Дата:</td>
+            <td style="color:#6c757d;">{{ last_login }}</td>
+        </tr>
+
+        <tr>
+            <td>IP-Адрес:</td>
+            <td style="color:#6c757d;">{{ from_ip }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<hr>
+
+<p style="color:#6c757d;">Если это были не вы, то, пожалуйста, поменяйте пароль в настройках Вашего профиля.</p>
+{% endblock %}

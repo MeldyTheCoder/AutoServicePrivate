@@ -1,10 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'section_base.html' %}
 
-</body>
-</html>
+{% load statistics %}
+{% load showroom %}
+{% load django_tables2 %}
+
+{% block title %}
+Статистика по модели "{{ model|verbose_name_plural }}"
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <nav class="breadcrumbs">
+                <ul>
+                    <li><a href="{% url 'index' %}">Главная</a></li>
+                    <li><a href="{% url 'showroom_list' %}">Автосалоны</a></li>
+                    <li><a href="{% url 'showroom_detail' showroom_slug=showroom.slug %}">{{ showroom.title }}</a></li>
+                    <li><a href="{% url 'statistics_list' showroom_slug=showroom.slug model_name=model_short %}">{{ model|verbose_name_plural }}</a></li>
+                    <li><span>Статистика</span></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block side_content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <h1 class="section-title h5"><span>Общая статистика по модели "{{ model|verbose_name_plural}}" </span></h1>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Характеристика</th>
+                <th scope="col">Значение</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for key, val in statistics.items %}
+                <tr>
+                    <td>{{ key }}</td>
+                    <td>{{ val|stat_value }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

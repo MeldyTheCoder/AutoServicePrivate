@@ -1,0 +1,36 @@
+{% load static %}
+
+<div class="col-lg-3 col-md-4 justify-content-center mb-4">
+    <div class="d-flex flex-column flex-shrink-0 p-3 bg-white rounded" style="width: 280px;">
+        <a href="{% url 'profile' %}" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-dark text-decoration-none">
+          <img src="https://www.meme-arsenal.com/memes/9991866f463a60d23ebb95b28be664e1.jpg" alt="" width="36" height="36" class="rounded-circle me-2">
+          <strong>{{ request.user.username }}</strong>
+        </a>
+
+    <hr>
+
+    <ul class="nav nav-pills flex-column mb-auto">
+      <li class="nav-item">
+        <a href="{% url 'profile' %}" style="width:100%;text-align:left;" class="btn rounded text-left">
+          Главная
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{% url 'password_change' %}" style="width:100%;text-align:left;" class="btn rounded text-left">
+          Смена пароля
+        </a>
+      </li>
+    </ul>
+
+    <hr>
+
+    <ul class="nav nav-pills flex-column mb-auto">
+        <li class="nav-item">
+          <a href="{% url 'logout' %}" style="width:100%;text-align:left;" class="btn rounded text-left">
+            Выход
+          </a>
+        </li>
+    </ul>
+  </div>
+</div>

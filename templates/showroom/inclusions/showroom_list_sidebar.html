@@ -1,0 +1,33 @@
+{% load static %}
+
+<div class="col-lg-3 col-md-4 justify-content-center p-3">
+    <div class="d-flex flex-column flex-shrink-0 p-3 bg-white rounded" style="width: 280px;">
+        <strong>Ваши автосалоны</strong>
+    <hr>
+
+    {% if request.user.showrooms.all %}
+        <ul class="nav nav-pills flex-column mb-auto">
+            {% for showroom in request.user.showrooms.all %}
+                <li class="nav-item">
+                  <a href="{% url 'showroom_detail' showroom_slug=showroom.slug %}" style="width:100%;text-align:left;" class="btn rounded text-left">
+                    {{ showroom.title }}
+                  </a>
+                </li>
+            {% empty %}
+                <p class="h4">Отсутсвуют</p>
+            {% endfor %}
+        </ul>
+
+    <hr>
+    {% endif %}
+
+    <ul class="nav nav-pills flex-column mb-auto">
+        <li class="nav-item">
+          <a href="{% url 'showroom_create' %}" style="width:100%;text-align:left;" class="btn btn-outline-success rounded text-left">
+            <i class="fa-solid fa-plus"></i> Добавить автосалон
+          </a>
+        </li>
+    </ul>
+
+  </div>
+</div>

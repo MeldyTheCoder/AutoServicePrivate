@@ -23,6 +23,11 @@ urlpatterns = [
         name='reset_password'
     ),
     path(
+        'password_reset/done',
+        views.CustomPasswordResetDoneView.as_view(),
+        name='password_reset_done'
+    ),
+    path(
         'password_reset/<uidb64>/<token>',
         views.CustomPasswordResetConfirmView.as_view(),
         name='password_reset_confirm'
@@ -37,4 +42,30 @@ urlpatterns = [
         views.ProfileView.as_view(),
         name='profile'
     ),
+    path(
+        'profile/edit/',
+        views.ProfileEditView.as_view(),
+        name='profile_edit'
+    ),
+    path(
+        'email_verification/send/',
+        views.EmailVerificationSend.as_view(),
+        name='email_verification_send'
+    ),
+    path(
+        'email_verification/<uidb64>/<token>/',
+        views.EmailVerificationCheckView.as_view(),
+        name='email_verification_check'
+    ),
+    path(
+        'email_verification/',
+        views.EmailVerificationInfoView.as_view(),
+        name='email_verification_info'
+    ),
+
+    path(
+        'email_verification/edit/',
+        views.EmailVerificationInfoView.as_view(),
+        name='email_verification_edit'
+    )
 ]

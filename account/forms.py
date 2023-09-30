@@ -6,16 +6,34 @@ from django.contrib.auth.forms import (
 
 from django.contrib.auth.forms import (
     UserCreationForm,
-    UserChangeForm
+    UserChangeForm,
+    PasswordResetForm
 )
 from django_registration.forms import RegistrationFormTermsOfService
 from django import forms
 from django.contrib.auth import get_user_model
+from AutoServiceAdmin.forms import CrispyForm
 
 USER_MODEL = get_user_model()
 
 
-class RegistrationForm(RegistrationFormTermsOfService):
+class CustomPasswordResetForm(CrispyForm, PasswordResetForm):
+    """
+    Форма для сброса пароля пользователя
+    """
+
+    submit_field = 'Отправить'
+
+
+class CustomSetPasswordForm(CrispyForm, SetPasswordForm):
+    """
+    Форма для установки пароля пользователя
+    """
+
+    submit_field = 'Сменить'
+
+
+class RegistrationForm(CrispyForm, RegistrationFormTermsOfService):
     """
     Форма для регистрации пользователя.
     """
@@ -23,9 +41,12 @@ class RegistrationForm(RegistrationFormTermsOfService):
     error_css_class = 'is-invalid'
     required_css_class = 'required'
 
+    submit_field = 'Зарегистрироваться'
+
     class Meta:
         model = USER_MODEL
         fields = [
+            'username',
             'email',
             'first_name',
             'last_name',
@@ -62,33 +83,15 @@ class CustomUserChangeForm(UserChangeForm):
         model = USER_MODEL
 
 
-class AuthorizationForm(AuthenticationForm):
+class AuthorizationForm(CrispyForm, AuthenticationForm):
     """
     Форма для авторизации пользователя.
     """
 
+    submit_field = 'Войти'
+
     error_css_class = 'is-invalid'
     required_css_class = 'required'
-
-    username = forms.EmailField(
-        label='Имя пользователя',
-        widget=forms.EmailInput(attrs={
-            "autofocus": True
-        }),
-        error_messages={
-            'required': 'Данное поле обязательно для заполнения.',
-            'invalid': 'Некорректный формат имени пользователя.'
-        }
-    )
-
-    password = forms.CharField(
-        label='Пароль',
-        strip=False,
-        widget=forms.PasswordInput(attrs={"autocomplete": "current-password"}),
-        error_messages={
-            'required': 'Данное поле обязательно для заполнения.'
-        }
-    )
 
     error_messages = {
         "invalid_login":
@@ -102,42 +105,50 @@ class AuthorizationForm(AuthenticationForm):
         fields = ['username', 'password']
 
 
-class ProfileForm(forms.ModelForm):
+class ProfileForm(CrispyForm, forms.ModelForm):
     """
     Форма для редактирования основной информации профиля пользователя
     """
+
+    submit_field = 'Изменить'
 
     class Meta:
         model = USER_MODEL
         fields = ['first_name', 'last_name']
 
 
-class ProfileSecurityForm(forms.ModelForm):
+class ProfileSecurityForm(CrispyForm, forms.ModelForm):
     """
     Форма редактирования настроек безопасности профиля пользователя.
     (Почта, пароль)
     """
+
+    submit_field = 'Изменить'
 
     class Meta:
         model = USER_MODEL
         fields = ['email', 'password']
 
 
-class ChangeEmailForVerificationForm(forms.ModelForm):
+class ChangeEmailForVerificationForm(CrispyForm, forms.ModelForm):
     """
     Форма для смены почты при ее верификации, на случай, если
     Пользователь при регистрации или смены почты укажет неверную почту
     """
+
+    submit_field = 'Изменить'
 
     class Meta:
         model = USER_MODEL
         fields = ['email']
 
 
-class CustomPasswordChangeForm(PasswordChangeForm):
+class CustomPasswordChangeForm(CrispyForm, PasswordChangeForm):
     """
     Форма для смены пароля пользователя
     """
+
+    submit_field = 'Сменить'
 
     error_css_class = 'is-invalid'
     required_css_class = 'required'

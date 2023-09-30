@@ -1,0 +1,29 @@
+{% load pagination %}
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm d-flex justify-content-center">
+            <div class="text-center">
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination pagination-centered mx-auto">
+
+                        {% if page_obj.has_previous %}
+                            <li class="page-item"><a class="page-link" href="{% build_url request=request page=page_obj.previous_page_number %}">Предыдущая</a></li>
+                        {% endif %}
+
+                        {% middle_pages page_obj=page_obj as pages %}
+
+                        {% for page in pages %}
+                            <li class="page-item"><a class="page-link {% if page == page_obj.number %}active{% endif %}" href="{% build_url request=request page=page %}">{{ page }}</a></li>
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item"><a class="page-link" href="{% build_url request=request page=page_obj.next_page_number %}">Следующая</a></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>

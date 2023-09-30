@@ -1,0 +1,23 @@
+{% load static %}
+
+<div class="col-lg-3 col-md-4 justify-content-center p-3">
+    <div class="d-flex flex-column flex-shrink-0 p-3 bg-white rounded" style="width: 280px;">
+        <a href="{% url 'showroom_detail' showroom_slug=showroom.slug %}">
+            <strong>{{ showroom.title }}</strong>
+        </a>
+    <hr>
+
+    <ul class="nav nav-pills flex-column mb-auto">
+        {% for model_short, verbose_name_plural in statistics_models_verbose_names_plural.items %}
+            <li class="nav-item">
+                <a href="{% url 'statistics_list' showroom_slug=showroom.slug model_name=model_short %}" style="width:100%;text-align:left;" class="btn rounded text-left">
+                    {{ verbose_name_plural }}
+                </a>
+            </li>
+        {% empty %}
+            <p class="h4">Отсутсвуют</p>
+        {% endfor %}
+    </ul>
+
+  </div>
+</div>

@@ -1,7 +1,6 @@
 import random
-
+from uuid import uuid4
 from django.db import models
-from autoslug import AutoSlugField
 from datetime import datetime, timedelta
 from django.apps import apps
 from django.utils.timezone import (
@@ -21,7 +20,6 @@ class StatisticsQuerySet(models.QuerySet):
     """
 
     def statistics(self, verbose_names=False):
-        statistics_filter_fields = self.model.statistics_filter_fields
         statistics_fields = self.model.statistics_fields
         statistics_fields_verbose_names = self.model.statistics_fields_verbose_names
 
@@ -29,14 +27,11 @@ class StatisticsQuerySet(models.QuerySet):
 
         if statistics_fields and isinstance(statistics_fields, dict):
             statistics = queryset.aggregate(
-                count=models.Count('pk'),
                 **statistics_fields
             )
 
         else:
-            statistics = queryset.aggregate(
-                count=models.Count('pk')
-            )
+            statistics = {}
 
         if verbose_names and statistics_fields_verbose_names:
             new_dict = {}
@@ -116,14 +111,13 @@ class AbstractStatisticsModel(models.Model):
 
         if self.statistics_fields and isinstance(self.statistics_fields, dict):
             statistics = queryset.aggregate(
-                count=models.Count('pk'),
                 **self.statistics_fields
             )
 
         else:
-            statistics = queryset.aggregate(
-                count=models.Count('pk')
-            )
+            statistics = {
+
+            }
 
         if verbose_names and self.statistics_fields_verbose_names:
             new_dict = {}
@@ -161,7 +155,13 @@ class Showroom(AbstractStatisticsModel):
         'sales_products_quantity_avg': 'Среднее кол-во единиц продаваемого товара за раз',
         'sales_products_quantity_sum': 'Суммарное кол-во единиц проданного товара',
         'sales_products_quantity_min': 'Минимальное кол-во единиц проданного товара за раз',
-        'sales_products_quantity_max': 'Максимальное кол-во единиц проданного товара за раз'
+        'sales_products_quantity_max': 'Максимальное кол-во единиц проданного товара за раз',
+
+        'sales_profit_avg': 'Средняя выручка',
+        'sales_profit_sum': 'Максимальная выручка',
+        'sales_profit_min': 'Минимальная выручка',
+        'sales_profit_max': 'Максимальная выручка'
+
 
     }
 
@@ -216,36 +216,36 @@ class Showroom(AbstractStatisticsModel):
         'sales_profit_avg': models.ExpressionWrapper(
             models.Avg(
                 (
-                    models.F('sold_products__product__supplied_products__supply_price')
-                    - models.F('sold_products__sale_price')
-                ) * models.F('sold_products__quantity')
+                    models.F('sales__sold_products__product__supplied_products__supply_price')
+                    - models.F('sales__sold_products__sale_price')
+                ) * models.F('sales__sold_products__quantity')
             ),
             output_field=models.DecimalField(decimal_places=2)
         ),
         'sales_profit_sum': models.ExpressionWrapper(
             models.Sum(
                 (
-                        models.F('sold_products__product__supplied_products__supply_price')
-                        - models.F('sold_products__sale_price')
-                ) * models.F('sold_products__quantity')
+                        models.F('sales__sold_products__product__supplied_products__supply_price')
+                        - models.F('sales__sold_products__sale_price')
+                ) * models.F('sales__sold_products__quantity')
             ),
             output_field=models.IntegerField()
         ),
         'sales_profit_max': models.ExpressionWrapper(
             models.Max(
                 (
-                        models.F('sold_products__product__supplied_products__supply_price')
-                        - models.F('sold_products__sale_price')
-                ) * models.F('sold_products__quantity')
+                        models.F('sales__sold_products__product__supplied_products__supply_price')
+                        - models.F('sales__sold_products__sale_price')
+                ) * models.F('sales__sold_products__quantity')
             ),
             output_field=models.IntegerField()
         ),
         'sales_profit_min': models.ExpressionWrapper(
             models.Min(
                 (
-                        models.F('sold_products__product__supplied_products__supply_price')
-                        - models.F('sold_products__sale_price')
-                ) * models.F('sold_products__quantity')
+                        models.F('sales__sold_products__product__supplied_products__supply_price')
+                        - models.F('sales__sold_products__sale_price')
+                ) * models.F('sales__sold_products__quantity')
             ),
             output_field=models.IntegerField()
         )
@@ -272,15 +272,12 @@ class Showroom(AbstractStatisticsModel):
         }
     )
 
-    slug = AutoSlugField(
+    slug = models.UUIDField(
         null=False,
         blank=False,
         unique=True,
         editable=False,
-        populate_from=lambda instance: f"автосалон-{instance.title}-{random_slug_number()}",
-        unique_with=[
-          'date_created'
-        ],
+        default=uuid4,
         verbose_name='Ссылка на объект',
         help_text='Ссылка на объект генерируется автоматически. Используется для адресации в URL-адресах.',
         error_messages={
@@ -348,7 +345,12 @@ class Employee(AbstractStatisticsModel):
         'sales_products_quantity_avg': 'Среднее кол-во единиц проданного товара за раз',
         'sales_products_quantity_sum': 'Суммарное кол-во единиц проданного товара',
         'sales_products_quantity_min': 'Минимальное кол-во единиц проданного товара за раз',
-        'sales_products_quantity_max': 'Максимальное кол-во единиц проданного товара за раз'
+        'sales_products_quantity_max': 'Максимальное кол-во единиц проданного товара за раз',
+
+        'sales_profit_avg': 'Средняя выручка с продаваемого товара',
+        'sales_profit_sum': 'Суммарная выручка с продаваемого товара',
+        'sales_profit_min': 'Средняя выручка с продаваемого товара',
+        'sales_profit_max': 'Средняя выручка с продаваемого товара',
 
     }
 
@@ -403,36 +405,36 @@ class Employee(AbstractStatisticsModel):
         'sales_profit_avg': models.ExpressionWrapper(
             models.Avg(
                 (
-                    models.F('sold_products__product__supplied_products__supply_price')
-                    - models.F('sold_products__sale_price')
-                ) * models.F('sold_products__quantity')
+                    models.F('sales__sold_products__product__supplied_products__supply_price')
+                    - models.F('sales__sold_products__sale_price')
+                ) * models.F('sales__sold_products__quantity')
             ),
             output_field=models.DecimalField(decimal_places=2)
         ),
         'sales_profit_sum': models.ExpressionWrapper(
             models.Sum(
                 (
-                        models.F('sold_products__product__supplied_products__supply_price')
-                        - models.F('sold_products__sale_price')
-                ) * models.F('sold_products__quantity')
+                        models.F('sales__sold_products__product__supplied_products__supply_price')
+                        - models.F('sales__sold_products__sale_price')
+                ) * models.F('sales__sold_products__quantity')
             ),
             output_field=models.IntegerField()
         ),
         'sales_profit_max': models.ExpressionWrapper(
             models.Max(
                 (
-                        models.F('sold_products__product__supplied_products__supply_price')
-                        - models.F('sold_products__sale_price')
-                ) * models.F('sold_products__quantity')
+                        models.F('sales__sold_products__product__supplied_products__supply_price')
+                        - models.F('sales__sold_products__sale_price')
+                ) * models.F('sales__sold_products__quantity')
             ),
             output_field=models.IntegerField()
         ),
         'sales_profit_min': models.ExpressionWrapper(
             models.Min(
                 (
-                        models.F('sold_products__product__supplied_products__supply_price')
-                        - models.F('sold_products__sale_price')
-                ) * models.F('sold_products__quantity')
+                        models.F('sales__sold_products__product__supplied_products__supply_price')
+                        - models.F('sales__sold_products__sale_price')
+                ) * models.F('sales__sold_products__quantity')
             ),
             output_field=models.IntegerField()
         )
@@ -491,16 +493,12 @@ class Employee(AbstractStatisticsModel):
         }
     )
 
-    slug = AutoSlugField(
+    slug = models.UUIDField(
         null=False,
         blank=False,
         unique=True,
         editable=False,
-        populate_from=lambda instance: f"сотрудник-{instance.first_name}-{instance.last_name}-{instance.surname}-{random_slug_number()}",
-        unique_with=[
-            'last_name',
-            'date_created'
-        ],
+        default=uuid4,
         verbose_name='Ссылка на объект',
         help_text='Ссылка на объект генерируется автоматически. Используется для адресации в URL-адресах.',
         error_messages={
@@ -551,7 +549,7 @@ class ProductCategory(AbstractStatisticsModel):
     related_name = 'product_categories'
 
     statistics_fields_verbose_names = {
-        'product_count': 'Кол-во товаров всего',
+        'products_count': 'Кол-во товаров всего',
         'sales_count': 'Кол-во проданных товаров',
 
         'sales_price_avg': 'Средняя цена заказа',
@@ -668,15 +666,12 @@ class ProductCategory(AbstractStatisticsModel):
         }
     )
 
-    slug = AutoSlugField(
+    slug = models.UUIDField(
         null=False,
         blank=False,
         unique=True,
         editable=False,
-        populate_from=lambda instance: f"категория-{instance.name}-{random_slug_number()}",
-        unique_with=[
-            'date_created'
-        ],
+        default=uuid4,
         verbose_name='Ссылка на объект',
         help_text='Ссылка на объект генерируется автоматически. Используется для адресации в URL-адресах.',
         error_messages={
@@ -790,11 +785,11 @@ class Product(AbstractStatisticsModel):
             output_field=models.IntegerField()
         ),
         'sales_quantity_min': models.ExpressionWrapper(
-            models.Min('products__sold_products__quantity'),
+            models.Min('sold_products__quantity'),
             output_field=models.IntegerField()
         ),
         'sales_quantity_max': models.ExpressionWrapper(
-            models.Max('products__sold_products__quantity'),
+            models.Max('sold_products__quantity'),
             output_field=models.IntegerField()
         ),
 
@@ -865,15 +860,12 @@ class Product(AbstractStatisticsModel):
         }
     )
 
-    slug = AutoSlugField(
+    slug = models.UUIDField(
         null=False,
         blank=False,
         unique=True,
         editable=False,
-        populate_from=lambda instance: f"товар-{instance.title}-{random_slug_number()}",
-        unique_with=[
-            'date_created'
-        ],
+        default=uuid4,
         verbose_name='Ссылка на объект',
         help_text='Ссылка на объект генерируется автоматически. Используется для адресации в URL-адресах.',
         error_messages={
@@ -1013,15 +1005,12 @@ class ProductSaleItem(models.Model):
 
     )
 
-    slug = AutoSlugField(
+    slug = models.UUIDField(
         null=False,
         blank=False,
         unique=True,
         editable=False,
-        populate_from=lambda instance: f"товар-заказа-{instance.product.title}-{random_slug_number()}",
-        unique_with=[
-            'date_created'
-        ],
+        default=uuid4,
         verbose_name='Ссылка на объект',
         help_text='Ссылка на объект генерируется автоматически. Используется для адресации в URL-адресах.',
         error_messages={
@@ -1097,12 +1086,12 @@ class ProductSale(models.Model):
         }
     )
 
-    slug = AutoSlugField(
+    slug = models.UUIDField(
         null=False,
         blank=False,
         unique=True,
         editable=False,
-        populate_from=lambda instance: f"продажа-{instance.showroom.title}-{random_slug_number()}",
+        default=uuid4,
         verbose_name='Ссылка на объект',
         help_text='Ссылка на объект генерируется автоматически. Используется для адресации в URL-адресах.',
         error_messages={
@@ -1177,15 +1166,12 @@ class ProductSupplyItem(models.Model):
 
     )
 
-    slug = AutoSlugField(
+    slug = models.UUIDField(
         null=False,
         blank=False,
         unique=True,
         editable=False,
-        populate_from=lambda instance: f"товар-поставки-{instance.product.title}-{random_slug_number()}",
-        unique_with=[
-            'date_created'
-        ],
+        default=uuid4,
         verbose_name='Ссылка на объект',
         help_text='Ссылка на объект генерируется автоматически. Используется для адресации в URL-адресах.',
         error_messages={
@@ -1259,12 +1245,12 @@ class ProductSupply(models.Model):
         }
     )
 
-    slug = AutoSlugField(
+    slug = models.UUIDField(
         null=False,
         blank=False,
         unique=True,
         editable=False,
-        populate_from=lambda instance: f"поставка-{instance.showroom.title}-{random_slug_number()}",
+        default=uuid4,
         verbose_name='Ссылка на объект',
         help_text='Ссылка на объект генерируется автоматически. Используется для адресации в URL-адресах.',
         error_messages={
@@ -1285,7 +1271,7 @@ class ProductSupply(models.Model):
     )
 
     def __str__(self):
-        return str(self.dealer)
+        return str(self.date_created)
 
     class Meta:
         verbose_name = 'Поставка товаров'
@@ -1296,7 +1282,11 @@ class Dealer(AbstractStatisticsModel):
     """
     Модель, описывающая сущность дилера - поставщика товаров.
     """
+
+    related_name = 'dealers'
+
     statistics_fields_verbose_names = {
+        'dealers_count': 'Кол-во дилеров всего',
         'supply_count': 'Кол-во поставок',
         'supply_product_count': 'Кол-во поставленных товаров всего',
         'supply_sales_count': 'Кол-во проданных товаров с поставок',
@@ -1318,6 +1308,11 @@ class Dealer(AbstractStatisticsModel):
     }
 
     statistics_fields = {
+        'dealers_count': models.ExpressionWrapper(
+            models.Count('pk'),
+            output_field=models.IntegerField()
+        ),
+
         'supply_count': models.ExpressionWrapper(
             models.Count('supplies'),
             output_field=models.IntegerField()
@@ -1327,43 +1322,43 @@ class Dealer(AbstractStatisticsModel):
             output_field=models.IntegerField()
         ),
         'supply_sales_count': models.ExpressionWrapper(
-            models.Count('supplies__supplied_products__product__sales__sold_products'),
+            models.Count('supplies__supplied_products__product__sold_products'),
             output_field=models.IntegerField()
         ),
 
         # Статистика по цене продаваемого товара
         'supply_sales_price_avg': models.ExpressionWrapper(
-            models.Avg('supplies__supplied_products__product__sales__sale_price'),
+            models.Avg('supplies__supplied_products__product__sold_products__sale_price'),
             output_field=models.DecimalField(decimal_places=2)
         ),
         'supply_sales_price_sum': models.ExpressionWrapper(
-            models.Sum('supplies__supplied_products__product__sales__sale_price'),
+            models.Sum('supplies__supplied_products__product__sold_products__sale_price'),
             output_field=models.IntegerField()
         ),
         'supply_sales_price_min': models.ExpressionWrapper(
-            models.Min('supplies__supplied_products__product__sales__sale_price'),
+            models.Min('supplies__supplied_products__product__sold_products__sale_price'),
             output_field=models.IntegerField()
         ),
         'supply_sales_price_max': models.ExpressionWrapper(
-            models.Max('supplies__supplied_products__product__sales__sale_price'),
+            models.Max('supplies__supplied_products__product__sold_products__sale_price'),
             output_field=models.IntegerField()
         ),
 
         # Статистика по кол-ву проданного товара
         'supply_sales_quantity_avg': models.ExpressionWrapper(
-            models.Avg('supplies__supplied_products__product__sales__quantity'),
+            models.Avg('supplies__supplied_products__product__sold_products__quantity'),
             output_field=models.DecimalField(decimal_places=2)
         ),
         'supply_sales_quantity_sum': models.ExpressionWrapper(
-            models.Sum('supplies__supplied_products__product__sales__quantity'),
+            models.Sum('supplies__supplied_products__product__sold_products__quantity'),
             output_field=models.IntegerField()
         ),
         'supply_sales_quantity_min': models.ExpressionWrapper(
-            models.Min('supplies__supplied_products__product__sales__quantity'),
+            models.Min('supplies__supplied_products__product__sold_products__quantity'),
             output_field=models.IntegerField()
         ),
         'supply_sales_quantity_max': models.ExpressionWrapper(
-            models.Max('supplies__supplied_products__product__sales__quantity'),
+            models.Max('supplies__supplied_products__product__sold_products__quantity'),
             output_field=models.IntegerField()
         ),
 
@@ -1419,15 +1414,12 @@ class Dealer(AbstractStatisticsModel):
         }
     )
 
-    slug = AutoSlugField(
+    slug = models.UUIDField(
         null=False,
         blank=False,
         unique=True,
         editable=False,
-        populate_from=lambda instance: f"дилер-{instance.name}-{random_slug_number()}",
-        unique_with=[
-            'date_created'
-        ],
+        default=uuid4,
         verbose_name='Ссылка на объект',
         help_text='Ссылка на объект генерируется автоматически. Используется для адресации в URL-адресах.',
         error_messages={
@@ -1444,6 +1436,19 @@ class Dealer(AbstractStatisticsModel):
         help_text='Дата добавления дилера.',
         error_messages={
             'required': 'Данное поле обязательно для заполнения.'
+        }
+    )
+
+    showroom = models.ForeignKey(
+        'showroom.Showroom',
+        on_delete=models.CASCADE,
+        null=False,
+        blank=False,
+        related_name=related_name,
+        verbose_name='Автосалон',
+        help_text='Укажите автосалон, к которому должна быть привязана поставка.',
+        error_messages={
+            'required': 'Данное поле обязательно для заполнения.',
         }
     )
 

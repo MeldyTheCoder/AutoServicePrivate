@@ -3,15 +3,20 @@
 <!doctype html>
 <html lang="en">
 
+{% load static %}
+
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Автосервис | {% block title %}{% endblock %}</title>
+	<title>Dealer Helper | {% block title %}{% endblock %}</title>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+	<link rel="stylesheet" href="{% static 'css/base/main.css' %}">
+	<link rel="stylesheet/scss" type="text/css" href="{% static 'css/base/main.scss' %}">
+	<link rel="icon" type="image/x-icon" href="{% static 'icons/favicon.ico' %}">
 	{% block extra_css %}
 	{% endblock %}
 </head>
@@ -27,7 +32,7 @@
 						<div class="col-6 col-sm-4">
 							<div class="header-top-phone d-flex align-items-center h-100">
 								<i class="fa-solid fa-mobile-screen"></i>
-								<a href="tel:+79997802509" class="ms-2">7-999-780-25-09</a>
+								<a href="tel:+79999999999" class="ms-2">7-999-999-99-99</a>
 							</div>
 						</div>
 
@@ -60,7 +65,7 @@
 											{% if not user.is_authenticated %}
 												Аккаунт
 											{% else %}
-												{{ user.full_name }}
+												{{ user.get_full_name }}
 											{% endif %}
 										</button>
 										{% if not user.is_authenticated %}
@@ -78,7 +83,7 @@
 													<a class="dropdown-item" href="{% url 'profile' %}">Профиль</a>
 												</li>
 												<li>
-													<a class="dropdown-item" href="{% url 'profile_showrooms' %}">Мои автосалоны</a>
+													<a class="dropdown-item" href="{% url 'showroom_list' %}">Мои автосалоны</a>
 												</li>
 												<li>
 													<a class="dropdown-item" href="{% url 'logout' %}">Выйти</a>
@@ -100,7 +105,7 @@
 					<div class="row align-items-center">
 
 						<div class="col-sm-6">
-							<a href="{% url 'index' %}" class="header-logo h1">Авто-Сервис</a>
+							<a href="{% url 'index' %}" class="header-logo h1">Dealer Helper</a>
 						</div>
 					</div>
 				</div>
@@ -112,7 +117,7 @@
 		<main class="main">
 			{% block messages %}
 				{% for message in messages %}
-					{% message message_object=message %}
+					{{ message }}
 				{% endfor %}
 			{% endblock %}
 
@@ -120,7 +125,7 @@
 			{% endblock %}
 
 			{% block content %}
-				{% translate 'Nothing found' %}
+				Ничего не найдено!
 			{% endblock %}
 		</main>
 
@@ -170,6 +175,7 @@
 
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+	<script src="{% static 'js/base/main.js' %}"></script>
 	{% block extra_js %}{% endblock %}
 </body>
 </html>

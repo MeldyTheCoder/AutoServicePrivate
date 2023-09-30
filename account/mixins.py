@@ -25,7 +25,7 @@ class EmailVerifiedMixin(AccessMixin):
         if not user.is_authenticated:
             return super().handle_no_permission()
 
-        return redirect('email_verification')
+        return redirect('email_verification_send')
 
 
 class EmailNotVerifiedMixin(AccessMixin):

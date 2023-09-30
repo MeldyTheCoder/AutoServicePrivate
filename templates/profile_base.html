@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% load account %}
+{% load pagination %}
+
+{% block title %}
+Hottabich | Profile
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="row">
+            {% profile_sidebar %}
+
+            <div class="col-lg-9 col-md-8">
+                {% block side_content %}
+                    <div class="row">
+                        <div class="col-sm d-flex justify-content-center p-3">
+                            <p class="h4">{% block empty_text %}Ничего не найдено!{% endblock %}</p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm d-flex justify-content-center p-3">
+                            <a class="btn rounded" href="{% url 'index' %}">Вернуться на главную</a>
+                        </div>
+                    </div>
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+
+    {% if page_obj.has_other_pages %}
+        {% pagination %}
+    {% endif %}
+{% endblock %}

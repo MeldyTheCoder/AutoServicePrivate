@@ -1,10 +1,46 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'showroom_base.html' %}
 
-</body>
-</html>
+{% load crispy_forms_tags %}
+
+{% block title %}
+Редактирование автосалона
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <nav class="breadcrumbs">
+                <ul>
+                    <li><a href="{% url 'index' %}">Главная</a></li>
+                    <li><a href="{% url 'showroom_list' %}">Автосалоны</a></li>
+                    <li><a href="{% url 'showroom_detail' showroom_slug=object.slug %}">{{ object.title }}</a></li>
+                    <li><span>Редактирование</span></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block side_content %}
+<div class="container-fluid mb-3">
+    <div class="row">
+        <div class="col-12">
+
+            <div class="page-register bg-white p-3">
+                <h1 class="section-title h3"><span>Редактирование автосалона</span></h1>
+
+                <div class="row">
+                    <div class="col-md-6 offset-md-3">
+                        <form method="POST">
+                            {% crispy form form.helper %}
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
